@@ -1,0 +1,19 @@
+# Build output (installers are published as GitHub release assets, never committed)
+*.exe
+dist/
+*.pdb
+
+# Anything that could hold a key or personal data
+*.bin
+notion-key*
+todoist-token*
+page-id.txt
+pending/
+.env*
+*.log
+
+# Editor / OS
+.vs/
+.vscode/
+Thumbs.db
+desktop.ini

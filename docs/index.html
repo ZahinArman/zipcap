@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zipcap: catch every thought</title>
+<meta name="description" content="Press Win+Shift+N anywhere, type, press Enter. Your thought lands in Notion (or Todoist). Free and open source for Windows.">
+<meta property="og:title" content="Zipcap: catch every thought">
+<meta property="og:description" content="Press Win+Shift+N anywhere, type, press Enter. It lands in Notion.">
+<meta property="og:image" content="poster.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='7' fill='%230A84FF'/%3E%3Cpath d='M9 12h14M9 19h9' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #0b0d14; --panel: #17181d; --line: rgba(255,255,255,.08); --text: #f5f5f7;
+    --muted: #9c9ca1; --accent: #0a84ff; --accent-2: #3d9bff; --todoist: #e44332;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 16px/1.6 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background-image:
+      radial-gradient(900px 500px at 15% -5%, rgba(10,132,255,.18), transparent 60%),
+      radial-gradient(700px 500px at 95% 30%, rgba(94,72,200,.14), transparent 60%);
+    background-repeat: no-repeat;
+  }
+  a { color: var(--accent-2); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px; }
+  header.hero { text-align: center; padding: 88px 0 40px; }
+  .mark { width: 72px; height: 72px; filter: drop-shadow(0 10px 22px rgba(0,0,0,.45)); }
+  h1 { font-size: 56px; line-height: 1.05; margin: 18px 0 8px; letter-spacing: -.02em; font-weight: 650; }
+  .tag { font-size: 22px; color: #c7c7cc; margin: 0 0 30px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px; border-radius: 12px;
+    background: #0066d6; color: white; font-weight: 600; font-size: 17px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.18);
+    transition: transform .15s ease, background .15s ease;
+  }
+  .btn:hover { background: #0a74ea; text-decoration: none; transform: translateY(-1px); }
+  .btn svg { width: 18px; height: 18px; }
+  .fine { color: var(--muted); font-size: 14px; margin-top: 14px; }
+  .beta { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+          color: #ffb340; border: 1px solid rgba(255,179,64,.35); border-radius: 999px; padding: 2px 10px; margin-bottom: 6px; }
+  .film { margin: 24px auto 0; border-radius: 16px; overflow: hidden; border: 1px solid var(--line);
+          box-shadow: 0 30px 80px rgba(0,0,0,.5); background: #000; }
+  .film video { display: block; width: 100%; height: auto; }
+  section { padding: 64px 0 8px; }
+  h2 { font-size: 30px; letter-spacing: -.01em; margin: 0 0 8px; font-weight: 620; }
+  .lead { color: var(--muted); margin: 0 0 28px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; font-weight: 600; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  kbd {
+    font: 600 13px/1 "Segoe UI", system-ui, sans-serif; color: var(--text); background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.14); border-bottom-width: 2px; border-radius: 6px; padding: 3px 7px;
+  }
+  code { font-family: "Cascadia Code", Consolas, monospace; font-size: .92em; background: rgba(255,255,255,.07);
+         border-radius: 5px; padding: 1px 6px; }
+  ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; gap: 14px; }
+  ol.steps > li { counter-increment: s; position: relative; background: var(--panel); border: 1px solid var(--line);
+                  border-radius: 14px; padding: 18px 20px 18px 64px; }
+  ol.steps > li::before {
+    content: counter(s); position: absolute; left: 20px; top: 18px; width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(10,132,255,.16); color: var(--accent-2); font-weight: 700; display: grid; place-items: center; font-size: 14px;
+  }
+  ol.steps strong { display: block; margin-bottom: 2px; }
+  ol.steps p { margin: 0; color: var(--muted); }
+  .smartscreen { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
+  .ss { background: #1a5f9e; color: white; border-radius: 8px; padding: 18px 18px 14px; font-size: 13px; min-height: 170px;
+        display: flex; flex-direction: column; font-family: "Segoe UI", sans-serif; }
+  .ss b { font-size: 19px; font-weight: 400; margin-bottom: 10px; }
+  .ss .lnk { text-decoration: underline; margin-top: 4px; }
+  .ss .hl { outline: 2px solid #ffd60a; outline-offset: 3px; border-radius: 3px; }
+  .ss .row { margin-top: auto; display: flex; justify-content: flex-end; gap: 8px; }
+  .ss .b { border: 1px solid rgba(255,255,255,.7); padding: 4px 14px; }
+  .ss .cap { opacity: 1; }
+  .note { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--muted); margin: 18px 0 0; }
+  footer { color: var(--muted); font-size: 14px; text-align: center; padding: 72px 0 48px; }
+  @media (max-width: 760px) {
+    h1 { font-size: 42px; } .grid3, .smartscreen { grid-template-columns: 1fr; }
+    header.hero { padding-top: 56px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <svg class="mark" viewBox="0 0 32 32" aria-hidden="true">
+      <rect x="2" y="2" width="28" height="28" rx="7" fill="#0A84FF"/>
+      <path d="M9 12h14M9 19h9" stroke="#fff" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div><span class="beta">Beta</span></div>
+    <h1>Zipcap</h1>
+    <p class="tag">Catch every thought. <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd>, type, <kbd>Enter</kbd>. It lands in Notion.</p>
+    <a class="btn" id="download" href="https://github.com/ZahinArman/zipcap/releases/latest/download/ZipcapSetup.exe">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 17h12"/></svg>
+      Download for Windows
+    </a>
+    <p class="fine">Windows 10 and 11 &middot; free &middot; <a href="https://github.com/ZahinArman/zipcap">open source</a> &middot; <span id="ver">latest version</span></p>
+    <div class="film">
+      <video src="zipcap-film.mp4" poster="poster.jpg" controls playsinline preload="none"></video>
+    </div>
+  </header>
+
+  <section>
+    <h2>What it does</h2>
+    <p class="lead">A small panel that opens over whatever you're doing, so a thought never has to wait for Notion to load.</p>
+    <div class="grid3">
+      <div class="card"><h3>Capture from anywhere</h3><p><kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd> opens it. <kbd>Enter</kbd> saves the note to the bottom of your Notion page. <kbd>Shift</kbd> <kbd>Enter</kbd> adds a new line.</p></div>
+      <div class="card"><h3>Tasks go to Todoist</h3><p>Start with <code>t:</code> and it becomes a Todoist task, dates included: <code>t: submit lab fri 8pm #Study p1</code></p></div>
+      <div class="card"><h3>Offline? It waits</h3><p>Notes are saved on your PC first and sent when you're back online. An orange dot in the tray shows something is waiting.</p></div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Install (about a minute)</h2>
+    <p class="lead">No admin rights needed. It installs just for you.</p>
+    <ol class="steps">
+      <li><strong>Download <a href="https://github.com/ZahinArman/zipcap/releases/latest/download/ZipcapSetup.exe">ZipcapSetup.exe</a> and open it.</strong>
+        <p>Windows will probably warn you, because Zipcap is new and not code-signed yet. Click <b>More info</b>, then <b>Run anyway</b>.</p>
+        <div class="smartscreen" aria-hidden="true">
+          <div class="ss"><b>Windows protected your PC</b><span class="cap">Microsoft Defender SmartScreen prevented an unrecognized app from starting…</span><span class="lnk hl">More info</span><div class="row"><span class="b">Don't run</span></div></div>
+          <div class="ss"><b>Windows protected your PC</b><span class="cap">App: ZipcapSetup.exe<br>Publisher: Unknown publisher</span><div class="row"><span class="b hl">Run anyway</span><span class="b">Don't run</span></div></div>
+        </div>
+      </li>
+      <li><strong>Click through the setup.</strong>
+        <p>Leave "Start Zipcap when Windows starts" ticked so <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd> always works. Finish launches it, and it sits in the tray (bottom right, near the clock).</p></li>
+      <li><strong>Connect Notion. Zipcap walks you through it.</strong>
+        <p>See the next section. You only do this once.</p></li>
+    </ol>
+  </section>
+
+  <section id="notion">
+    <h2>Connect Notion</h2>
+    <p class="lead">Zipcap uses a private Notion "integration" that only you own and that can only see the one page you pick.</p>
+    <ol class="steps">
+      <li><strong>Create the integration.</strong>
+        <p>Go to <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener">notion.so/profile/integrations</a> → <b>New integration</b>. Name it "Zipcap", pick your workspace, type <b>Internal</b>, then save. Copy the <b>Internal Integration Secret</b> (it starts with <code>ntn_</code>) and paste it into Zipcap.</p></li>
+      <li><strong>Pick a page and share it with the integration.</strong>
+        <p>Open the page you want notes in (make a new one called "Inbox" if you like). Click <b>•••</b> (top right) → <b>Connections</b> → add <b>Zipcap</b>.</p></li>
+      <li><strong>Paste the page link into Zipcap.</strong>
+        <p><b>•••</b> → <b>Copy link</b>, paste it, press <kbd>Enter</kbd>. When you see "Connected", you're done. Try <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd>.</p></li>
+    </ol>
+    <p class="note"><b>Todoist (optional):</b> the first time you type a note starting with <code>t:</code>, Zipcap asks for your API token. Find it in Todoist under <a href="https://app.todoist.com/app/settings/integrations/developer" target="_blank" rel="noopener">Settings → Integrations → Developer</a>.</p>
+  </section>
+
+  <section id="privacy">
+    <h2>Your data stays yours</h2>
+    <div class="grid3">
+      <div class="card"><h3>Keys stay on your PC</h3><p>Your Notion secret and Todoist token are encrypted with Windows (DPAPI), so only your Windows account can read them.</p></div>
+      <div class="card"><h3>No servers, no tracking</h3><p>Zipcap talks only to Notion, Todoist and GitHub (to check for updates). There are no analytics and no accounts.</p></div>
+      <div class="card"><h3>Open source</h3><p>Every line is on <a href="https://github.com/ZahinArman/zipcap">GitHub</a>. You can build it yourself with one command.</p></div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>Good to know</h2>
+    <div class="grid3">
+      <div class="card"><h3>Updates</h3><p>When a new version is out, Zipcap shows a note in the tray. Click it and it updates itself in a few seconds.</p></div>
+      <div class="card"><h3>Change settings</h3><p>Right-click the tray icon to change the Notion page, secret or Todoist token.</p></div>
+      <div class="card"><h3>Uninstall</h3><p>Windows Settings → Apps → Zipcap → Uninstall. To also forget your keys, delete <code>%APPDATA%\Zipcap</code>.</p></div>
+    </div>
+    <p class="note">This is a beta. Something broken or confusing? Message Zahin. Every bit of feedback helps.</p>
+  </section>
+
+  <footer>
+    Zipcap &middot; MIT licensed &middot; <a href="https://github.com/ZahinArman/zipcap">GitHub</a> &middot; <a href="https://github.com/ZahinArman/zipcap/releases">All releases</a>
+  </footer>
+</div>
+<script>
+  // Show the current version next to the button (best effort; the link always gets the latest).
+  fetch("https://api.github.com/repos/ZahinArman/zipcap/releases/latest")
+    .then(r => r.ok ? r.json() : null)
+    .then(j => { if (j && j.tag_name) document.getElementById("ver").textContent = j.tag_name; })
+    .catch(() => {});
+</script>
+</body>
+</html>
