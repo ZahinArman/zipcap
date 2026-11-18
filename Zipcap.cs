@@ -184,7 +184,7 @@ class Theme
 
 class ZipcapWindow : Window
 {
-    const string NotionIntegrationsUrl = "https://www.notion.so/profile/integrations";
+    const string NotionDevToolsUrl = "https://www.notion.so/profile/integrations";
     const string TodoistTokenUrl = "https://app.todoist.com/app/settings/integrations/developer";
     // ZIPCAP_TODOIST lets a test point task sending at a fake server.
     static readonly string TodoistBase = Environment.GetEnvironmentVariable("ZIPCAP_TODOIST") ?? "https://api.todoist.com";
@@ -520,12 +520,12 @@ class ZipcapWindow : Window
         help.Inlines.Clear();
         if (kind == "notion")
         {
-            help.Inlines.Add("Create an internal integration, then copy its secret.  ");
-            help.Inlines.Add(Link("Open Notion integrations", NotionIntegrationsUrl));
+            help.Inlines.Add("Developer tools → New connection (API token) → copy the token.  ");
+            help.Inlines.Add(Link("Open Notion developer tools", NotionDevToolsUrl));
         }
         else if (kind == "page")
         {
-            help.Inlines.Add("On the page: ••• → Connections → add your integration. Then ••• → Copy link and paste it here.");
+            help.Inlines.Add("Give your connection the page (its Content access tab → Edit access). Then on the page: Share → Copy link, and paste it here.");
         }
         else
         {
@@ -573,7 +573,7 @@ class ZipcapWindow : Window
         placeholder.Text = !keyMode ? "What's on your mind?   ·   t: for a Todoist task"
             : setup == "todoist" ? "Paste your Todoist API token"
             : setup == "page" ? "Paste the Notion page link"
-            : "Paste your Notion secret (starts with ntn_)";
+            : "Paste your Notion API token (starts with ntn_)";
         bool empty = setup == "page" ? linkBox.Text.Length == 0
                    : keyMode ? keyBox.Password.Length == 0 : box.Text.Length == 0;
         placeholder.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
@@ -790,7 +790,7 @@ class ZipcapWindow : Window
         }
         if (!todoist && !(k.StartsWith("ntn_") || k.StartsWith("secret_")))
         {
-            SetStatus("That doesn't look like a Notion secret (ntn_…)", t.Error, false);
+            SetStatus("That doesn't look like a Notion token (ntn_…)", t.Error, false);
             return;
         }
         checking = true;
@@ -799,7 +799,7 @@ class ZipcapWindow : Window
         checking = false;
         if (r == "KEY")
         {
-            SetStatus(todoist ? "Todoist didn't accept that token" : "Notion didn't accept that secret", t.Error, false);
+            SetStatus(todoist ? "Todoist didn't accept that token" : "Notion didn't accept that token", t.Error, false);
             return;
         }
         // "OK", or offline ("RETRY"): save it anyway; a bad key gets caught when sending.
@@ -824,8 +824,8 @@ class ZipcapWindow : Window
         SetStatus("Checking…", t.Secondary, false);
         var r = await Task.Run(() => CheckPage(id));
         checking = false;
-        if (r == "KEY") { SetMode("notion"); SetStatus("Notion secret rejected. Paste it again.", t.Error, false); keyBox.Focus(); return; }
-        if (r == "PAGE") { SetStatus("Not shared yet: ••• → Connections → add it", t.Error, false); return; }
+        if (r == "KEY") { SetMode("notion"); SetStatus("Notion token rejected. Paste it again.", t.Error, false); keyBox.Focus(); return; }
+        if (r == "PAGE") { SetStatus("Not shared yet: add it in Content access", t.Error, false); return; }
         try { Store.PageId = id; }
         catch { SetStatus("Couldn't save the page on this PC", t.Error, false); return; }
         warnedPage = false;
@@ -991,12 +991,12 @@ class ZipcapWindow : Window
             SetStatus(ask == "page" ? "Pick a page for your notes. They're safe." :
                       ask == "todoist" && stopTodoist == "TNONE" ? "Connect Todoist once to send tasks." :
                       ask == "todoist" ? "Todoist token rejected. Notes are safe." :
-                                         "Notion secret rejected. Notes are safe.", t.Error, false);
+                                         "Notion token rejected. Notes are safe.", t.Error, false);
         }
         if (stopNotion == "PAGE" && !warnedPage)
         {
             warnedPage = true;
-            Notify("Your Zipcap page isn't shared with the integration (Notion: ••• → Connections). " +
+            Notify("Your Zipcap page isn't shared with your Notion connection (Developer tools → your connection → Content access). " +
                    "Your notes are safe and will send once it's fixed.");
         }
         // Keep retrying while any lane is waiting on the network or Notion (keys wait for you).
@@ -1033,7 +1033,7 @@ class ZipcapWindow : Window
     }
 
     // Returns null on success, or why it failed:
-    // "KEY" bad/missing key, "NOPAGE" no page chosen yet, "PAGE" page not shared with the integration,
+    // "KEY" bad/missing key, "NOPAGE" no page chosen yet, "PAGE" page not shared with the connection,
     // "RETRY" offline / timeout / Notion busy, "BAD" Notion refused this note's content.
     static string Append(string text)
     {
@@ -1115,7 +1115,7 @@ class ZipcapWindow : Window
         menu.Items.Add("Capture   Win+Shift+N", null, (s, e) => ShowBox());
         menu.Items.Add("Open Zipcap page in Notion", null, (s, e) => OpenPage());
         menu.Items.Add("Change Notion page…", null, (s, e) => StartSetup(Store.Has(Store.NotionKey) ? "page" : "notion"));
-        menu.Items.Add("Change Notion secret…", null, (s, e) => StartSetup("notion"));
+        menu.Items.Add("Change Notion token…", null, (s, e) => StartSetup("notion"));
         menu.Items.Add("Change Todoist token…", null, (s, e) => StartSetup("todoist"));
         sendNow = new Forms.ToolStripMenuItem("Send waiting notes now", null, (s, e) => Flush()) { Visible = false };
         menu.Items.Add(sendNow);

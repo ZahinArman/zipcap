@@ -15,12 +15,12 @@ Free and open source, for Windows 10 and 11. **Currently in beta.**
 
 ## Install
 1. Download `ZipcapSetup.exe` from [Releases](https://github.com/ZahinArman/zipcap/releases/latest) and run it. Windows SmartScreen may warn because the installer isn't code-signed yet: click **More info → Run anyway**.
-2. Zipcap asks for a Notion integration secret, then the link of the page to write to. The [website](https://zahinarman.github.io/zipcap/#notion) walks through it with steps.
+2. Zipcap asks for a Notion API token (Notion → Developer tools → New connection), then the link of the page to write to (give the connection that page under Content access first). The [website](https://zahinarman.github.io/zipcap/#notion) has short videos of every step.
 
 It installs per user (no admin) into `%LOCALAPPDATA%\Programs\Zipcap`. Uninstall it from **Settings → Apps**.
 
 ## Privacy and security
-- Your Notion secret and Todoist token are stored only on your PC, in `%APPDATA%\Zipcap`. They are encrypted with Windows DPAPI, so only your Windows account can read them.
+- Your Notion API token and Todoist token are stored only on your PC, in `%APPDATA%\Zipcap`. They are encrypted with Windows DPAPI, so only your Windows account can read them.
 - Zipcap connects only to `api.notion.com`, `api.todoist.com` and `api.github.com` (for update checks), all over HTTPS. It has no telemetry, no analytics, and no server of its own.
 - The updater only downloads installers published as release assets of this repository.
 

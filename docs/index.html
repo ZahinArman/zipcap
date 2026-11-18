@@ -67,21 +67,20 @@
   }
   ol.steps strong { display: block; margin-bottom: 2px; }
   ol.steps p { margin: 0; color: var(--muted); }
-  .smartscreen { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px; }
-  .ss { background: #1a5f9e; color: white; border-radius: 8px; padding: 18px 18px 14px; font-size: 13px; min-height: 170px;
-        display: flex; flex-direction: column; font-family: "Segoe UI", sans-serif; }
-  .ss b { font-size: 19px; font-weight: 400; margin-bottom: 10px; }
-  .ss .lnk { text-decoration: underline; margin-top: 4px; }
-  .ss .hl { outline: 2px solid #ffd60a; outline-offset: 3px; border-radius: 3px; }
-  .ss .row { margin-top: auto; display: flex; justify-content: flex-end; gap: 8px; }
-  .ss .b { border: 1px solid rgba(255,255,255,.7); padding: 4px 14px; }
-  .ss .cap { opacity: 1; }
+  .clip { display: block; width: 100%; height: auto; margin-top: 14px; border-radius: 10px; background: #000;
+          border: 1px solid var(--line); aspect-ratio: 16 / 9; cursor: pointer; }
+  .film button { all: unset; display: block; position: relative; width: 100%; cursor: pointer; }
+  .film button img { display: block; width: 100%; height: auto; }
+  .film .play { position: absolute; inset: 0; margin: auto; width: 72px; height: 72px; border-radius: 50%;
+                background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.25); display: grid; place-items: center; }
+  .film button:hover .play { background: rgba(0,0,0,.72); }
+  .film button:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 4px; }
   .note { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--muted); margin: 18px 0 0; }
   footer { color: var(--muted); font-size: 14px; text-align: center; padding: 72px 0 48px; }
   footer .credit { color: var(--text); font-size: 16px; margin: 0 0 10px; }
   footer .credit a { color: var(--text); font-weight: 600; }
   @media (max-width: 760px) {
-    h1 { font-size: 42px; } .grid3, .smartscreen { grid-template-columns: 1fr; }
+    h1 { font-size: 42px; } .grid3 { grid-template-columns: 1fr; }
     header.hero { padding-top: 56px; }
   }
   @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
@@ -103,7 +102,7 @@
     </a>
     <p class="fine">Windows 10 and 11 &middot; free &middot; <a href="https://github.com/ZahinArman/zipcap">open source</a> &middot; <span id="ver">latest version</span></p>
     <div class="film">
-      <video src="zipcap-film.mp4" poster="poster.jpg" controls playsinline preload="none"></video>
+      <button type="button" id="film" aria-label="Play the 40-second Zipcap film"><img src="poster.jpg" alt="Zipcap: catch every thought" width="1280" height="720"><span class="play" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" fill="#fff"/></svg></span></button>
     </div>
   </header>
 
@@ -121,15 +120,10 @@
     <h2>Install (about a minute)</h2>
     <p class="lead">No admin rights needed. It installs just for you.</p>
     <ol class="steps">
-      <li><strong>Download <a href="https://github.com/ZahinArman/zipcap/releases/latest/download/ZipcapSetup.exe">ZipcapSetup.exe</a> and open it.</strong>
-        <p>Windows will probably warn you, because Zipcap is new and not code-signed yet. Click <b>More info</b>, then <b>Run anyway</b>.</p>
-        <div class="smartscreen" aria-hidden="true">
-          <div class="ss"><b>Windows protected your PC</b><span class="cap">Microsoft Defender SmartScreen prevented an unrecognized app from starting…</span><span class="lnk hl">More info</span><div class="row"><span class="b">Don't run</span></div></div>
-          <div class="ss"><b>Windows protected your PC</b><span class="cap">App: ZipcapSetup.exe<br>Publisher: Unknown publisher</span><div class="row"><span class="b hl">Run anyway</span><span class="b">Don't run</span></div></div>
-        </div>
+      <li><strong>Download <a href="https://github.com/ZahinArman/zipcap/releases/latest/download/ZipcapSetup.exe">ZipcapSetup.exe</a>, open it, and click through the setup.</strong>
+        <p>Windows will probably show a red "Windows protected your PC" screen, because Zipcap is new and not code-signed yet. Click <b>More info</b>, then <b>Run anyway</b>. In the setup, leave "Start Zipcap when Windows starts" ticked so <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd> always works. Zipcap then lives in the tray, near the clock.</p>
+        <video class="clip" src="setup/step1-install.mp4" poster="setup/step1-install.jpg" muted loop playsinline preload="none" title="Click to pause or play" aria-label="Video: downloading and installing Zipcap"></video>
       </li>
-      <li><strong>Click through the setup.</strong>
-        <p>Leave "Start Zipcap when Windows starts" ticked so <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd> always works. Finish launches it, and it sits in the tray (bottom right, near the clock).</p></li>
       <li><strong>Connect Notion. Zipcap walks you through it.</strong>
         <p>See the next section. You only do this once.</p></li>
     </ol>
@@ -137,14 +131,20 @@
 
   <section id="notion">
     <h2>Connect Notion</h2>
-    <p class="lead">Zipcap uses a private Notion "integration" that only you own and that can only see the one page you pick.</p>
+    <p class="lead">Zipcap uses a private Notion connection that only you own and that can only see the page you give it. Press <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd> and Zipcap walks you through this.</p>
     <ol class="steps">
-      <li><strong>Create the integration.</strong>
-        <p>Go to <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener">notion.so/profile/integrations</a> → <b>New integration</b>. Name it "Zipcap", pick your workspace, type <b>Internal</b>, then save. Copy the <b>Internal Integration Secret</b> (it starts with <code>ntn_</code>) and paste it into Zipcap.</p></li>
-      <li><strong>Pick a page and share it with the integration.</strong>
-        <p>Open the page you want notes in (make a new one called "Inbox" if you like). Click <b>•••</b> (top right) → <b>Connections</b> → add <b>Zipcap</b>.</p></li>
+      <li><strong>Create a connection and give it your page.</strong>
+        <p>Click the link in Zipcap (or go to <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener">Notion's developer tools</a>) → <b>New connection</b>. Name it "Zipcap", keep <b>API token</b>, then <b>Create connection</b>. Copy the <b>API token</b> (it starts with <code>ntn_</code>), paste it into Zipcap and press <kbd>Enter</kbd>. Then open the connection's <b>Content access</b> tab → <b>Edit access</b>, pick the page you want notes in, and <b>Save</b>.</p>
+        <video class="clip" src="setup/step2-connection.mp4" poster="setup/step2-connection.jpg" muted loop playsinline preload="none" title="Click to pause or play" aria-label="Video: creating the Notion connection and giving it a page"></video>
+      </li>
       <li><strong>Paste the page link into Zipcap.</strong>
-        <p><b>•••</b> → <b>Copy link</b>, paste it, press <kbd>Enter</kbd>. When you see "Connected", you're done. Try <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd>.</p></li>
+        <p>Open that page in Notion → <b>Share</b> → <b>Copy link</b>. Paste it into Zipcap and press <kbd>Enter</kbd>. When you see "Connected", you're done.</p>
+        <video class="clip" src="setup/step3-page.mp4" poster="setup/step3-page.jpg" muted loop playsinline preload="none" title="Click to pause or play" aria-label="Video: pasting the Notion page link into Zipcap"></video>
+      </li>
+      <li><strong>Try it.</strong>
+        <p>Press <kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd> anywhere, type a thought, press <kbd>Enter</kbd>. It shows up at the bottom of your page.</p>
+        <video class="clip" src="setup/step4-first-note.mp4" poster="setup/step4-first-note.jpg" muted loop playsinline preload="none" title="Click to pause or play" aria-label="Video: sending the first note"></video>
+      </li>
     </ol>
     <p class="note"><b>Todoist (optional):</b> the first time you type a note starting with <code>t:</code>, Zipcap asks for your API token. Find it in Todoist under <a href="https://app.todoist.com/app/settings/integrations/developer" target="_blank" rel="noopener">Settings → Integrations → Developer</a>.</p>
   </section>
@@ -152,7 +152,7 @@
   <section id="privacy">
     <h2>Your data stays yours</h2>
     <div class="grid3">
-      <div class="card"><h3>Keys stay on your PC</h3><p>Your Notion secret and Todoist token are encrypted with Windows (DPAPI), so only your Windows account can read them.</p></div>
+      <div class="card"><h3>Keys stay on your PC</h3><p>Your Notion token and Todoist token are encrypted with Windows (DPAPI), so only your Windows account can read them.</p></div>
       <div class="card"><h3>No servers, no tracking</h3><p>Zipcap talks only to Notion, Todoist and GitHub (to check for updates). There are no analytics and no accounts.</p></div>
       <div class="card"><h3>Open source</h3><p>Every line is on <a href="https://github.com/ZahinArman/zipcap">GitHub</a>. You can build it yourself with one command.</p></div>
     </div>
@@ -162,7 +162,7 @@
     <h2>Good to know</h2>
     <div class="grid3">
       <div class="card"><h3>Updates</h3><p>When a new version is out, Zipcap shows a note in the tray. Click it and it updates itself in a few seconds.</p></div>
-      <div class="card"><h3>Change settings</h3><p>Right-click the tray icon to change the Notion page, secret or Todoist token.</p></div>
+      <div class="card"><h3>Change settings</h3><p>Right-click the tray icon to change the Notion page, Notion token or Todoist token.</p></div>
       <div class="card"><h3>Uninstall</h3><p>Windows Settings → Apps → Zipcap → Uninstall. To also forget your keys, delete <code>%APPDATA%\Zipcap</code>.</p></div>
     </div>
     <p class="note">This is a beta. Something broken or confusing? Message Zahin. Every bit of feedback helps.</p>
@@ -174,6 +174,23 @@
   </footer>
 </div>
 <script>
+  // Setup clips: load and loop only while visible (saves data, keeps the page fast).
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) e.target.play().catch(() => {}); else e.target.pause();
+  }), { threshold: 0.4 });
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
+    document.querySelectorAll("video.clip").forEach(v => io.observe(v));
+  document.querySelectorAll("video.clip").forEach(v =>
+    v.addEventListener("click", () => v.paused ? v.play() : v.pause()));
+
+  // Launch film: show the poster image until clicked (some browsers show the first frame instead).
+  document.getElementById("film").addEventListener("click", function () {
+    const v = document.createElement("video");
+    v.src = "zipcap-film.mp4"; v.controls = true; v.autoplay = true; v.playsInline = true;
+    v.style.cssText = "display:block;width:100%;height:auto";
+    this.replaceWith(v);
+  });
+
   // Show the current version next to the button (best effort; the link always gets the latest).
   fetch("https://api.github.com/repos/ZahinArman/zipcap/releases/latest")
     .then(r => r.ok ? r.json() : null)
