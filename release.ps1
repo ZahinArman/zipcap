@@ -34,7 +34,7 @@ if ($LASTEXITCODE -ne 0) { throw "Installer build failed." }
 git add -A
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\scan-secrets.ps1
 if ($LASTEXITCODE -ne 0) { git reset -q; throw "Secret scan failed. Nothing was committed or pushed." }
-git commit -q -m "Release v$Version"
+if (git status --porcelain) { git commit -q -m "Release v$Version" }
 git tag -a "v$Version" -m "Zipcap $Version"
 
 # 5) Push and publish. The asset is always named ZipcapSetup.exe so the
