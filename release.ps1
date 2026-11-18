@@ -41,4 +41,4 @@ git tag -a "v$Version" -m "Zipcap $Version"
 #    .../releases/latest/download/ZipcapSetup.exe link on the website never changes.
 git push -q origin HEAD --follow-tags
 gh release create "v$Version" "dist\ZipcapSetup.exe" --repo $repo --title "Zipcap $Version" --notes $Notes
-Write-Output "Released v$Version: https://github.com/$repo/releases/tag/v$Version"
+Write-Output "Released v${Version}: https://github.com/$repo/releases/tag/v$Version"
