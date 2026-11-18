@@ -44,3 +44,5 @@ Testing hooks (environment variables):
 
 ## License
 [MIT](LICENSE)
+
+Made by [Zahin Arman](https://github.com/ZahinArman).
