@@ -13,17 +13,22 @@ if (git status --porcelain) { throw "Commit or stash your changes first; release
 if (git tag -l "v$Version") { throw "v$Version already exists." }
 
 # 1) Version everywhere it appears.
-$cs = Get-Content -Raw Zipcap.cs
+#    Read/write as UTF-8 without BOM (Windows PowerShell 5 would otherwise mangle → and •).
+$utf8 = New-Object System.Text.UTF8Encoding $false
+$csPath = Join-Path $PSScriptRoot "Zipcap.cs"; $issPath = Join-Path $PSScriptRoot "installer\zipcap.iss"
+$cs = [IO.File]::ReadAllText($csPath, $utf8)
 $cs = $cs -replace 'public const string Version = "[0-9.]+"', "public const string Version = `"$Version`""
 $cs = $cs -replace 'Assembly(File)?Version\("[0-9.]+"\)', "Assembly`$1Version(`"$Version.0`")"
-[IO.File]::WriteAllText("$PWD\Zipcap.cs", $cs)
-$iss = Get-Content -Raw installer\zipcap.iss
+[IO.File]::WriteAllText($csPath, $cs, $utf8)
+$iss = [IO.File]::ReadAllText($issPath, $utf8)
 $iss = $iss -replace '#define AppVersion "[0-9.]+"', "#define AppVersion `"$Version`""
-[IO.File]::WriteAllText("$PWD\installer\zipcap.iss", $iss)
+[IO.File]::WriteAllText($issPath, $iss, $utf8)
 
 # 2) Exe, 3) installer.
-cmd /c build.cmd
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path Zipcap.exe)) { throw "Build failed." }
+$exe = Join-Path $PSScriptRoot "Zipcap.exe"
+Remove-Item $exe -ErrorAction SilentlyContinue
+cmd /c "`"$(Join-Path $PSScriptRoot 'build.cmd')`""
+if ($LASTEXITCODE -ne 0 -or -not (Test-Path $exe)) { throw "Build failed." }
 $iscc = @("$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe", "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe") |
     Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $iscc) { throw "Inno Setup not found. winget install JRSoftware.InnoSetup" }
