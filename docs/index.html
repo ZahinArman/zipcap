@@ -3,11 +3,62 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zipcap: catch every thought</title>
-<meta name="description" content="Press Win+Shift+N anywhere, type, press Enter. Your thought lands in Notion (or Todoist). Free and open source for Windows.">
+<title>Zipcap: free quick capture to Notion for Windows (Win+Shift+N)</title>
+<meta name="description" content="Zipcap is a free, open-source quick capture app for Windows 10 and 11. Press Win+Shift+N anywhere, type a thought, press Enter, and it is saved to your Notion page. Start with t: to add a Todoist task. Works offline.">
+<link rel="canonical" href="https://zahinarman.github.io/zipcap/">
+<meta name="author" content="Zahin Arman">
+<meta name="robots" content="index, follow, max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Zipcap">
+<meta property="og:url" content="https://zahinarman.github.io/zipcap/">
 <meta property="og:title" content="Zipcap: catch every thought">
-<meta property="og:description" content="Press Win+Shift+N anywhere, type, press Enter. It lands in Notion.">
-<meta property="og:image" content="poster.jpg">
+<meta property="og:description" content="Free quick capture for Windows. Press Win+Shift+N anywhere, type, press Enter. It lands in Notion.">
+<meta property="og:image" content="https://zahinarman.github.io/zipcap/poster.jpg">
+<meta property="og:image:width" content="1280">
+<meta property="og:image:height" content="720">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Zipcap: catch every thought">
+<meta name="twitter:description" content="Free quick capture for Windows. Press Win+Shift+N anywhere, type, press Enter. It lands in Notion.">
+<meta name="twitter:image" content="https://zahinarman.github.io/zipcap/poster.jpg">
+<link rel="alternate" type="text/plain" title="LLM summary" href="https://zahinarman.github.io/zipcap/llms.txt">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Zipcap",
+  "alternateName": "Zipcap quick capture",
+  "description": "Free, open-source quick capture app for Windows. A global hotkey (Win+Shift+N) opens a small panel over any app; Enter appends the note to a Notion page. Notes starting with t: become Todoist tasks. Works offline and syncs later. No account, no telemetry.",
+  "url": "https://zahinarman.github.io/zipcap/",
+  "downloadUrl": "https://github.com/ZahinArman/zipcap/releases/latest/download/ZipcapSetup.exe",
+  "installUrl": "https://github.com/ZahinArman/zipcap/releases/latest/download/ZipcapSetup.exe",
+  "image": "https://zahinarman.github.io/zipcap/poster.jpg",
+  "video": {
+    "@type": "VideoObject",
+    "name": "Zipcap in 40 seconds",
+    "description": "Press Win+Shift+N anywhere, type a thought, press Enter, and it lands in Notion.",
+    "thumbnailUrl": "https://zahinarman.github.io/zipcap/poster.jpg",
+    "contentUrl": "https://zahinarman.github.io/zipcap/zipcap-film.mp4",
+    "uploadDate": "2026-11-18"
+  },
+  "applicationCategory": "ProductivityApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "softwareRequirements": ".NET Framework 4.8 (included with Windows)",
+  "isAccessibleForFree": true,
+  "license": "https://opensource.org/licenses/MIT",
+  "codeRepository": "https://github.com/ZahinArman/zipcap",
+  "keywords": "quick capture, Notion, Todoist, Windows, hotkey, note taking, inbox, productivity, open source",
+  "featureList": [
+    "Global hotkey Win+Shift+N opens a capture panel over any app",
+    "Enter appends the note to the bottom of a Notion page you choose",
+    "Notes starting with t: become Todoist tasks with natural-language dates",
+    "Offline queue: notes are saved to disk and sent when back online",
+    "Tokens encrypted on the PC with Windows DPAPI; no servers, no analytics",
+    "Follows the Windows light/dark theme; one-click updates"
+  ],
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Zahin Arman", "url": "https://github.com/ZahinArman" }
+}
+</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='7' fill='%230A84FF'/%3E%3Cpath d='M9 12h14M9 19h9' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
   :root {
@@ -108,7 +159,7 @@
 
   <section>
     <h2>What it does</h2>
-    <p class="lead">A small panel that opens over whatever you're doing, so a thought never has to wait for Notion to load.</p>
+    <p class="lead">Zipcap is a free quick capture app for Windows. It puts a small panel over whatever you're doing, so a thought never has to wait for Notion to load.</p>
     <div class="grid3">
       <div class="card"><h3>Capture from anywhere</h3><p><kbd>Win</kbd> <kbd>Shift</kbd> <kbd>N</kbd> opens it. <kbd>Enter</kbd> saves the note to the bottom of your Notion page. <kbd>Shift</kbd> <kbd>Enter</kbd> adds a new line.</p></div>
       <div class="card"><h3>Tasks go to Todoist</h3><p>Start with <code>t:</code> and it becomes a Todoist task, dates included: <code>t: submit lab fri 8pm #Study p1</code></p></div>
