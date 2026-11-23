@@ -25,12 +25,12 @@ using Drawing = System.Drawing;
 [assembly: System.Reflection.AssemblyTitle("Zipcap")]
 [assembly: System.Reflection.AssemblyProduct("Zipcap")]
 [assembly: System.Reflection.AssemblyDescription("Capture a thought to Notion or Todoist from anywhere")]
-[assembly: System.Reflection.AssemblyVersion("0.1.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("0.1.1.0")]
+[assembly: System.Reflection.AssemblyVersion("0.1.2.0")]
+[assembly: System.Reflection.AssemblyFileVersion("0.1.2.0")]
 
 static class Program
 {
-    public const string Version = "0.1.1"; // release.ps1 keeps this and the attributes above in sync
+    public const string Version = "0.1.2"; // release.ps1 keeps this and the attributes above in sync
     public const string Repo = "ZahinArman/zipcap";
 
     [STAThread]

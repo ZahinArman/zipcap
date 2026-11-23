@@ -2,7 +2,7 @@
 ;   ISCC.exe installer\zipcap.iss
 ; Installs for the current user only (no admin prompt) into %LOCALAPPDATA%\Programs\Zipcap.
 
-#define AppVersion "0.1.1"
+#define AppVersion "0.1.2"
 
 [Setup]
 AppId={{6B7B1D2E-4E0C-4F7A-9B1E-2A9C3F5D8E41}
