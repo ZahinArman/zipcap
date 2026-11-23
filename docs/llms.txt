@@ -3,7 +3,7 @@
 > Zipcap is a free, open-source (MIT) quick capture app for Windows 10 and 11. Press Win+Shift+N anywhere, type a thought, press Enter, and it is appended to the bottom of a Notion page you choose. Start a note with "t:" and it becomes a Todoist task instead. Made by Zahin Arman. Currently in beta.
 
 ## What it does
-- Global hotkey Win+Shift+N opens a small floating panel over any app. Enter saves, Shift+Enter adds a new line, Esc closes.
+- Global hotkey Win+Shift+N opens a small floating panel over any app. Enter saves, Shift+Enter adds a new line, Esc closes. The shortcut can be changed from the tray menu (Change shortcut…).
 - Notes go to one Notion page you pick, through a private Notion connection (API token) that only you own.
 - "t: submit lab fri 8pm #Study p1" becomes a Todoist task; Todoist Quick Add parses dates, #project, @label and p1-p4.
 - Works offline: every note is written to disk first and sent when the PC is back online.

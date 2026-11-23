@@ -10,6 +10,7 @@ Free and open source, for Windows 10 and 11. **Currently in beta.**
 - A small floating panel that opens over any app. <kbd>Enter</kbd> saves, <kbd>Shift</kbd>+<kbd>Enter</kbd> adds a new line, <kbd>Ctrl</kbd>+<kbd>↓</kbd> makes it taller, <kbd>Esc</kbd> closes it.
 - `t: submit lab fri 8pm #Study p1` becomes a Todoist task. Todoist's Quick Add understands the dates, `#project`, `@label` and `p1`–`p4`.
 - Works offline: every note is written to disk first and sent when you're back online. Nothing is lost if the PC shuts down mid-send.
+- Opens with <kbd>Win</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd> by default. Pick a different shortcut from the tray menu (**Change shortcut…**).
 - Follows the Windows light/dark theme.
 - Checks GitHub for new releases and offers a one-click update from the tray.
 

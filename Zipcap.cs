@@ -85,6 +85,30 @@ static class Store
         File.WriteAllBytes(SecretPath(name), data);
     }
 
+    // The capture shortcut, as RegisterHotKey modifier bits + a virtual-key code. Plain text
+    // ("mods vk"), nothing secret. Missing or unreadable -> the default, Win+Shift+N.
+    static readonly string HotkeyFile = System.IO.Path.Combine(Dir, "hotkey.txt");
+    public const uint DefaultMods = 0x8 | 0x4, DefaultVk = 0x4E; // MOD_WIN | MOD_SHIFT, N
+
+    public static void ReadHotkey(out uint mods, out uint vk)
+    {
+        mods = DefaultMods; vk = DefaultVk;
+        try
+        {
+            var p = File.ReadAllText(HotkeyFile).Trim().Split(' ');
+            uint m = uint.Parse(p[0]), v = uint.Parse(p[1]);
+            if ((m & 0xB) != 0 && (m & ~0xFu) == 0 && v > 0 && v < 0xFF) { mods = m; vk = v; } // needs Ctrl, Alt or Win
+        }
+        catch { }
+    }
+
+    public static void WriteHotkey(uint mods, uint vk)
+    {
+        Directory.CreateDirectory(Dir);
+        if (mods == DefaultMods && vk == DefaultVk) { try { File.Delete(HotkeyFile); } catch { } return; }
+        File.WriteAllText(HotkeyFile, mods + " " + vk);
+    }
+
     public static string PageId
     {
         get { try { var s = File.ReadAllText(PageFile).Trim(); return s.Length == 32 ? s : null; } catch { return null; } }
@@ -202,7 +226,9 @@ class ZipcapWindow : Window
     [DllImport("user32.dll")] static extern bool UnregisterHotKey(IntPtr hWnd, int id);
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr hWnd);
     [DllImport("user32.dll")] static extern bool DestroyIcon(IntPtr h);
-    const uint MOD_SHIFT = 0x4, MOD_WIN = 0x8, MOD_NOREPEAT = 0x4000, VK_N = 0x4E;
+    const uint MOD_ALT = 0x1, MOD_CONTROL = 0x2, MOD_SHIFT = 0x4, MOD_WIN = 0x8, MOD_NOREPEAT = 0x4000;
+    uint hkMods, hkVk; // the capture shortcut in use (see Store.ReadHotkey)
+    Forms.ToolStripMenuItem captureItem;
     const int WM_HOTKEY = 0x0312, HOTKEY_ID = 1;
     const double ShadowPad = 28; // transparent room around the panel for the drop shadow
 
@@ -243,9 +269,11 @@ class ZipcapWindow : Window
 
         hwnd = new WindowInteropHelper(this).EnsureHandle();
         HwndSource.FromHwnd(hwnd).AddHook(WndProc);
-        if (!RegisterHotKey(hwnd, HOTKEY_ID, MOD_WIN | MOD_SHIFT | MOD_NOREPEAT, VK_N))
-            Notify("Win+Shift+N is taken by another app. Click this tray icon to capture instead.");
+        Store.ReadHotkey(out hkMods, out hkVk);
         BuildTray();
+        if (!RegisterHotKey(hwnd, HOTKEY_ID, hkMods | MOD_NOREPEAT, hkVk))
+            Notify(HotkeyText(hkMods, hkVk) + " is taken by another app. Pick another in the tray menu (Change shortcut…), " +
+                   "or click this tray icon to capture.");
 
         // Retry quietly every 30s while something is waiting, and right away when the
         // internet comes back. Also send anything left over from last time (e.g. after a reboot).
@@ -493,12 +521,20 @@ class ZipcapWindow : Window
     {
         setup = kind;
         keyMode = kind != null;
-        bool page = kind == "page";
+        HookKeys(kind == "hotkey");
+        bool page = kind == "page", hk = kind == "hotkey";
         box.Visibility = keyMode ? Visibility.Collapsed : Visibility.Visible;
-        keyBox.Visibility = keyMode && !page ? Visibility.Visible : Visibility.Collapsed;
+        keyBox.Visibility = keyMode && !page && !hk ? Visibility.Visible : Visibility.Collapsed;
         linkBox.Visibility = page ? Visibility.Visible : Visibility.Collapsed;
         help.Visibility = keyMode ? Visibility.Visible : Visibility.Collapsed;
-        if (keyMode)
+        if (hk)
+        {
+            title.Text = "Change shortcut";
+            title.Foreground = new SolidColorBrush(t.Secondary);
+            SetHelp(kind);
+            SetHints("DEL", "Reset to Win+Shift+N", "esc", "Cancel");
+        }
+        else if (keyMode)
         {
             title.Text = kind == "todoist" ? "Connect Todoist" : page ? "Choose a Notion page (2 of 2)" : "Connect Notion (1 of 2)";
             title.Foreground = new SolidColorBrush(t.Secondary);
@@ -522,6 +558,10 @@ class ZipcapWindow : Window
         {
             help.Inlines.Add("Developer tools → New connection (API token) → copy the token.  ");
             help.Inlines.Add(Link("Open Notion developer tools", NotionDevToolsUrl));
+        }
+        else if (kind == "hotkey")
+        {
+            help.Inlines.Add("Now: " + HotkeyText(hkMods, hkVk) + ". Hold Ctrl, Alt or Win (Shift optional) and press a key. It's saved as soon as you press it.");
         }
         else if (kind == "page")
         {
@@ -554,7 +594,8 @@ class ZipcapWindow : Window
 
     void FocusInput()
     {
-        if (setup == "page") linkBox.Focus();
+        if (setup == "hotkey") Focus(); // keys go to OnKey; there's nothing to type into
+        else if (setup == "page") linkBox.Focus();
         else if (keyMode) keyBox.Focus();
         else { box.Focus(); box.CaretIndex = box.Text.Length; ShowLatest(); }
     }
@@ -573,8 +614,10 @@ class ZipcapWindow : Window
         placeholder.Text = !keyMode ? "What's on your mind?   ·   t: for a Todoist task"
             : setup == "todoist" ? "Paste your Todoist API token"
             : setup == "page" ? "Paste the Notion page link"
+            : setup == "hotkey" ? "Press the new shortcut…"
             : "Paste your Notion API token (starts with ntn_)";
-        bool empty = setup == "page" ? linkBox.Text.Length == 0
+        bool empty = setup == "hotkey" ? true
+                   : setup == "page" ? linkBox.Text.Length == 0
                    : keyMode ? keyBox.Password.Length == 0 : box.Text.Length == 0;
         placeholder.Visibility = empty ? Visibility.Visible : Visibility.Collapsed;
     }
@@ -706,6 +749,7 @@ class ZipcapWindow : Window
             st2.BeginAnimation(ScaleTransform.ScaleXProperty, null);
             st2.BeginAnimation(ScaleTransform.ScaleYProperty, null);
             if (clearPending) { box.Clear(); clearPending = false; }
+            HookKeys(false);
             keyBox.Clear();
             linkBox.Clear();
             ClearStatus();
@@ -734,6 +778,12 @@ class ZipcapWindow : Window
     void OnKey(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Escape) { e.Handled = true; HideBox(); return; }
+        if (setup == "hotkey")
+        {
+            e.Handled = true;
+            if (llHook == IntPtr.Zero) PickHotkey(e.Key == Key.System ? e.SystemKey : e.Key); // else the hook has it
+            return;
+        }
         if ((Keyboard.Modifiers & ModifierKeys.Control) != 0 && (e.Key == Key.Down || e.Key == Key.Up) && !keyMode)
         {
             e.Handled = true;
@@ -759,9 +809,139 @@ class ZipcapWindow : Window
         if (msg == WM_HOTKEY && w.ToInt32() == HOTKEY_ID)
         {
             handled = true;
-            if (IsVisible && IsActive && !hiding) HideBox(); else ShowBox();
+            if (setup == "hotkey" && IsVisible && !hiding)
+                SetStatus("That's already your shortcut", t.Secondary, false); // pressed it while picking a new one
+            else if (IsVisible && IsActive && !hiding) HideBox(); else ShowBox();
         }
         return IntPtr.Zero;
+    }
+
+    // ---------- shortcut ----------
+
+    static string HotkeyText(uint mods, uint vk)
+    {
+        var s = "";
+        if ((mods & MOD_WIN) != 0) s += "Win+";
+        if ((mods & MOD_CONTROL) != 0) s += "Ctrl+";
+        if ((mods & MOD_ALT) != 0) s += "Alt+";
+        if ((mods & MOD_SHIFT) != 0) s += "Shift+";
+        return s + KeyName(vk);
+    }
+
+    static string KeyName(uint vk)
+    {
+        if ((vk >= 0x30 && vk <= 0x39) || (vk >= 0x41 && vk <= 0x5A)) return ((char)vk).ToString();
+        switch (vk)
+        {
+            case 0x20: return "Space";
+            case 0xBA: return ";"; case 0xBB: return "="; case 0xBC: return ","; case 0xBD: return "-";
+            case 0xBE: return "."; case 0xBF: return "/"; case 0xC0: return "`"; case 0xDB: return "[";
+            case 0xDC: return "\\"; case 0xDD: return "]"; case 0xDE: return "'";
+        }
+        var k = KeyInterop.KeyFromVirtualKey((int)vk).ToString();
+        if (k.StartsWith("NumPad")) return "Num " + k.Substring(6);
+        return k == "Next" ? "PageDown" : k == "Prior" ? "PageUp" : k == "Return" ? "Enter" : k == "Back" ? "Backspace" : k;
+    }
+
+    // While "Change shortcut" is up and the panel is in front, a low-level keyboard hook sees
+    // each combo before Windows hands it to whichever app registered it. Without this, a combo
+    // another app owns never reaches the panel: that app's action runs and Zipcap can't say
+    // "taken". The hook only exists in this mode and ignores keys meant for other windows.
+    [DllImport("user32.dll")] static extern IntPtr SetWindowsHookEx(int id, LowLevelKeyboardProc fn, IntPtr mod, uint thread);
+    [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr h);
+    [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr h, int code, IntPtr w, IntPtr l);
+    [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+    [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vk);
+    [DllImport("user32.dll")] static extern void keybd_event(byte vk, byte scan, uint flags, UIntPtr extra);
+    [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandle(string name);
+    delegate IntPtr LowLevelKeyboardProc(int code, IntPtr w, IntPtr l);
+    LowLevelKeyboardProc hookProc; // kept in a field so the GC can't collect it while hooked
+    IntPtr llHook;
+
+    void HookKeys(bool on)
+    {
+        if (on && llHook == IntPtr.Zero)
+        {
+            hookProc = OnLowLevelKey;
+            llHook = SetWindowsHookEx(13 /* WH_KEYBOARD_LL */, hookProc, GetModuleHandle(null), 0);
+        }
+        else if (!on && llHook != IntPtr.Zero) { UnhookWindowsHookEx(llHook); llHook = IntPtr.Zero; }
+    }
+
+    static bool Down(int vk) { return (GetAsyncKeyState(vk) & 0x8000) != 0; }
+
+    IntPtr OnLowLevelKey(int code, IntPtr w, IntPtr l)
+    {
+        int msg = w.ToInt32();
+        if (code >= 0 && (msg == 0x100 || msg == 0x104) && GetForegroundWindow() == hwnd) // WM_KEYDOWN / WM_SYSKEYDOWN
+        {
+            uint vk = (uint)Marshal.ReadInt32(l);
+            bool modifier = (vk >= 0x10 && vk <= 0x12) || (vk >= 0xA0 && vk <= 0xA5) || vk == 0x5B || vk == 0x5C;
+            if (!modifier && vk != 0x1B && vk != 0xE8) // Esc goes through to close; 0xE8 is our own dummy key
+            {
+                uint mods = 0;
+                bool win = Down(0x5B) || Down(0x5C);
+                if (win) mods |= MOD_WIN;
+                if (Down(0x11)) mods |= MOD_CONTROL;
+                if (Down(0x12)) mods |= MOD_ALT;
+                if (Down(0x10)) mods |= MOD_SHIFT;
+                // Swallowing the key would leave Windows seeing a bare Win press, so the Start
+                // menu would open on release. A harmless unassigned key in between prevents it.
+                if (win) keybd_event(0xE8, 0, 0, UIntPtr.Zero);
+                Dispatcher.BeginInvoke(new Action(() => PickHotkey(mods, vk)));
+                return (IntPtr)1; // swallowed: the app that owns this combo doesn't fire
+            }
+        }
+        return CallNextHookEx(llHook, code, w, l);
+    }
+
+    // Fallback when the hook couldn't be set: read the key from WPF instead.
+    void PickHotkey(Key key)
+    {
+        if (key == Key.LeftCtrl || key == Key.RightCtrl || key == Key.LeftAlt || key == Key.RightAlt ||
+            key == Key.LeftShift || key == Key.RightShift || key == Key.LWin || key == Key.RWin || key == Key.None) return;
+        var m = Keyboard.Modifiers;
+        uint mods = 0;
+        if ((m & ModifierKeys.Windows) != 0 || Keyboard.IsKeyDown(Key.LWin) || Keyboard.IsKeyDown(Key.RWin)) mods |= MOD_WIN;
+        if ((m & ModifierKeys.Control) != 0) mods |= MOD_CONTROL;
+        if ((m & ModifierKeys.Alt) != 0) mods |= MOD_ALT;
+        if ((m & ModifierKeys.Shift) != 0) mods |= MOD_SHIFT;
+        PickHotkey(mods, (uint)KeyInterop.VirtualKeyFromKey(key));
+    }
+
+    // A combo was pressed on "Change shortcut". Delete/Backspace alone goes back to the default.
+    void PickHotkey(uint mods, uint vk)
+    {
+        if (setup != "hotkey") return;
+        if (mods == 0 && (vk == 0x2E || vk == 0x08)) { mods = Store.DefaultMods; vk = Store.DefaultVk; }
+        else if ((mods & (MOD_WIN | MOD_CONTROL | MOD_ALT)) == 0)
+        {
+            SetStatus("Hold Ctrl, Alt or Win too", t.Error, false);
+            return;
+        }
+        if (mods == hkMods && vk == hkVk) { SetStatus("That's already your shortcut", t.Secondary, false); return; }
+
+        // Swap: let go of the old one, try the new one, and put the old one back if it's taken.
+        UnregisterHotKey(hwnd, HOTKEY_ID);
+        if (!RegisterHotKey(hwnd, HOTKEY_ID, mods | MOD_NOREPEAT, vk))
+        {
+            RegisterHotKey(hwnd, HOTKEY_ID, hkMods | MOD_NOREPEAT, hkVk);
+            SetStatus(HotkeyText(mods, vk) + " is taken. Try another.", t.Error, false);
+            return;
+        }
+        hkMods = mods; hkVk = vk;
+        try { Store.WriteHotkey(mods, vk); }
+        catch { SetStatus("Works now, but couldn't save it for next time", t.Error, false); UpdateTray(); return; }
+        UpdateTray();
+        SetHelp("hotkey");
+        ShortcutSaved();
+    }
+
+    async void ShortcutSaved()
+    {
+        SetStatus("Shortcut: " + HotkeyText(hkMods, hkVk), t.Success, true);
+        await Task.Delay(900);
+        if (setup == "hotkey") HideBox();
     }
 
     // ---------- saving ----------
@@ -1112,11 +1292,13 @@ class ZipcapWindow : Window
     void BuildTray()
     {
         var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add("Capture   Win+Shift+N", null, (s, e) => ShowBox());
+        captureItem = new Forms.ToolStripMenuItem("", null, (s, e) => ShowBox());
+        menu.Items.Add(captureItem);
         menu.Items.Add("Open Zipcap page in Notion", null, (s, e) => OpenPage());
         menu.Items.Add("Change Notion page…", null, (s, e) => StartSetup(Store.Has(Store.NotionKey) ? "page" : "notion"));
         menu.Items.Add("Change Notion token…", null, (s, e) => StartSetup("notion"));
         menu.Items.Add("Change Todoist token…", null, (s, e) => StartSetup("todoist"));
+        menu.Items.Add("Change shortcut…", null, (s, e) => StartSetup("hotkey"));
         sendNow = new Forms.ToolStripMenuItem("Send waiting notes now", null, (s, e) => Flush()) { Visible = false };
         menu.Items.Add(sendNow);
         menu.Items.Add(new Forms.ToolStripSeparator());
@@ -1126,8 +1308,9 @@ class ZipcapWindow : Window
         menu.Items.Add("Quit", null, (s, e) => Quit());
         tray = new Forms.NotifyIcon
         {
-            Icon = iconIdle, Text = "Zipcap (Win+Shift+N)", ContextMenuStrip = menu, Visible = true
+            Icon = iconIdle, ContextMenuStrip = menu, Visible = true
         };
+        UpdateTray();
         tray.MouseClick += (s, e) => { if (e.Button == Forms.MouseButtons.Left) ShowBox(); };
         tray.BalloonTipClicked += (s, e) => { if (updateUrl != null && updateItem.Enabled) InstallUpdate(); };
 
@@ -1224,8 +1407,9 @@ class ZipcapWindow : Window
         int n = PendingFiles().Length;
         tray.Icon = n > 0 ? iconWaiting : iconIdle;
         tray.Text = n > 0 ? "Zipcap: " + n + (n == 1 ? " note" : " notes") + " waiting to send"
-                          : "Zipcap (Win+Shift+N)";
+                          : "Zipcap (" + HotkeyText(hkMods, hkVk) + ")";
         sendNow.Visible = n > 0;
+        captureItem.Text = "Capture   " + HotkeyText(hkMods, hkVk);
     }
 
     void Notify(string msg)
@@ -1239,6 +1423,7 @@ class ZipcapWindow : Window
     void Quit()
     {
         try { outbox.Wait(3000); } catch { } // give an in-flight send a moment; unsent notes stay on disk
+        HookKeys(false);
         UnregisterHotKey(hwnd, HOTKEY_ID);
         tray.Visible = false;
         tray.Dispose();
