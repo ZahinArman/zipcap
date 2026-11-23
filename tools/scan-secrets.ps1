@@ -30,6 +30,11 @@ $patterns = @(
     '(?<![0-9a-fA-F-])[0-9a-f]{32}(?![0-9a-fA-F-])', # bare Notion page/database IDs
     'C:\\Users\\[A-Za-z]+'             # personal Windows paths
 )
+# IndexNow keys are public by design (the site must serve docs/<key>.txt containing <key>),
+# so exactly those values are allowed. Any other 32-hex value still fails.
+$publicKeys = @(Get-ChildItem docs -Filter *.txt -ErrorAction SilentlyContinue |
+    Where-Object { $_.BaseName -match '^[0-9a-f]{32}$' -and (Get-Content -Raw $_.FullName).Trim() -eq $_.BaseName } |
+    ForEach-Object { $_.BaseName })
 # Email addresses in files (commit trailers like noreply@ are fine).
 $emailPattern = '(?<![\w.+-])(?!noreply@)[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z.]{2,}'
 $files = git ls-files --cached --others --exclude-standard
@@ -40,6 +45,7 @@ foreach ($f in $files) {
     if ($null -eq $text) { continue }
     foreach ($p in $patterns) {
         foreach ($m in [regex]::Matches($text, $p)) {
+            if ($publicKeys -contains $m.Value) { continue }
             $v = $m.Value; $show = $v.Substring(0, [Math]::Min(6, $v.Length)) + "…"
             Write-Output "FOUND in ${f}: $show  (pattern: $p)"
             $bad = $true
@@ -53,7 +59,7 @@ foreach ($f in $files) {
 # --format= drops the "commit <hash>" lines, which would look like 40-hex tokens.
 $history = (git log -p --all --no-color --format= 2>$null) -join "`n"
 foreach ($p in $patterns) {
-    if ([regex]::IsMatch($history, $p)) {
+    if ([regex]::Matches($history, $p) | Where-Object { $publicKeys -notcontains $_.Value }) {
         Write-Output "FOUND in git history (pattern: $p). Run: git log -p --all -G '<pattern>'"
         $bad = $true
     }
